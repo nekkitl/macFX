@@ -3,54 +3,66 @@
 # Nick "nekkitl" Ognev, 2023
 set MACFX_VERSION "2023.0522"
 # ----------------------------------------------------------------
-function macfx_update
-    set API_URL "https://api.nekkit.xyz/macfx/ver"
-    if ping -q -c 1 -W 1 google.com >/dev/null
-        set api_version (curl -s $API_URL)
-        if test "$api_version" != "$MACFX_VERSION"
-            echo 'macFX have update! Shell I update to '$api_version'? [y/n]'
-            read macfx_confirm
-            if test "$macfx_confirm" = y
-                wget 'https://github.com/nekkitl/macfx.git' ~/.config/fish/functions
+function macfx_update --argument argv
+    switch $argv[2]
+        case self
+            set API_URL "https://api.nekkit.xyz/macfx/ver"
+            if ping -q -c 1 -W 1 google.com >/dev/null
+                set api_version (curl -s $API_URL)
+                if test "$api_version" != "$MACFX_VERSION"
+                    echo 'macFX have update! Shell I update to '$api_version'? [y/n]'
+                    read macfx_confirm
+                    if test "$macfx_confirm" = y
+                        wget 'https://api.nekkit.xyz/macfx/app' ~/.config/fish/functions/macfx.fish
+                    end
+                end
             end
-        end
+        case all
+            echo 'Get apps list...'
+            brew update
+            echo 'Starting upgrade apps and libs...'
+            brew upgrade
+            echo 'Cleanup cache...'
+            brew cleanup
+            echo 'Starting self-upgrade...'
+            macfx_update self
+            echo 'Update fish completions...'
+            fish_update_completions
+            echo 'Update location DB...'
+            sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.locate.plist
+            echo 'Done.'
+        case locate
+            sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.locate.plist
+            echo 'Done.'
+        case fish
+            fish_update_completions
+        case '*'
+            echo 'Wake up, Neo...'
     end
 end
 # ----------------------------------------------------------------
 function macfx_lib
     echo '. macOS Fixer eXtention ['$MACFX_VERSION']
-├── Apps
+├── App tools:
 │   ├── discord - Show all devices in app.
 │   ├── xattr - the easy solution, if app dont launch by many ## reasons.
-│   └── msf - Add MSF support to fish 3.\*
-├── Updates:
-│   ├── update_all - Updates all
-│   ├── locate_up - Update locate DB
-│   └── fish_up - Update fish completions via man
-├── Services:
+│   └── msf - Add MSF support to fish 3.*
+├── Update funcs:
+│   └── update
+│          ├── all - Update all
+│          ├── self - Update self (macfx)
+│          ├── fish - Update fish and completions via man
+│          └── locate - Update locate DB
+├── Services management:
 │   ├── spell - SpellChk service
+│   ├── airdrop - AirDrop enabler via eth0 (if available Bluetooth)
 │   └── rdbug - restarts Remote Desktop services
 └── System tools:
     ├── rtcsnd - Fix RTC on hackintosh systems.
     ├── tm - easy cleanup manager of Timeshift.
+    ├── tm - easy cleanup manager of Timeshift.
     └── jenv - List and select Java Environment
     '
-end
-# ----------------------------------------------------------------
-function macfx_allupdate
-    echo 'Get apps list...'
-    brew update
-    echo 'Starting upgrade apps and libs...'
-    brew upgrade
-    echo 'Cleanup cache...'
-    brew cleanup
-    echo 'Starting self-upgrade...'
-    macfx_update
-    echo 'Update fish completions...'
-    fish_update_completions
-    echo 'Update location DB...'
-    sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.locate.plist
-    echo 'Done.'
 end
 # ---------- Discord Devices not seen fix ------------------------
 function macfx_discord
@@ -59,9 +71,31 @@ function macfx_discord
 end
 # ----------------------------------------------------------------
 function macfx_msf_fish_helper
-    wget "" -O '~/.config/fish/functions/msf.fish'
+    wget "https://api.nekkit.xyz/macfx/msf" -O '~/.config/fish/functions/msf.fish'
+    source
     echo 'Done. Try MSF in terminal.'
 end
+# ----------------------------------------------------------------
+function macfx_du_se --argument argv
+    if test (count $argv[2]) -eq 0
+        echo '. macOS Fixer eXtention
+└── duse - macOS Secure Erase for any disk
+    ├── [level] - From 0 to 4 levels of erasing, higher level - most secure.
+    │    └── [disk] - Disk indentifier from listing.
+    └── ls - List disks'
+    else
+        if test (count $argv[2]) -eq 1
+            diskutil secureErase $argv[2] /dev/$args[3]
+        else
+            switch $argv[2]
+                case ls
+                    set disk_list (diskutil list | awk '{print $2,$NF}')
+                    echo $disk_list | sed 's/\/dev\///g'
+            end
+        end
+    end
+end
+
 # ----------------------------------------------------------------
 function macfx_jenv --argument argv
     if test (count $argv[2]) -eq 0
@@ -149,8 +183,24 @@ example: /Applications/your-broken.app'
         echo 'Done.'
     end
 end
+function macfx_airdrop --argument argv
+    if test (count $argv[2]) -eq 0
+        echo '. macOS Fixer eXtention
+└── airdrop - Controller AirDrop via eth0
+    ├── on - On AirDrop via eth0
+    └── off - Off AirDrop via eth0'
+    else
+        switch $args[2]
+            case on
+                defaults write com.apple.NetworkBrowser BrowseAllInterfaces 1
+                killall Finder
+            case off
+                defaults write com.apple.NetworkBrowser BrowseAllInterfaces 0
+                killall Finder
+        end
+    end
+end
 
-# ----------------------------------------------------------------
 # ----------------------------------------------------------------
 # ----------------------------------------------------------------
 # ----------- Main manager of input args -------------------------
@@ -175,12 +225,10 @@ function macfx_argv_manager --argument argv
             launchctl stop com.apple.applespell
             launchctl start com.apple.applespell
             echo Restarted.
-        case fish_up
-            fish_update_completions
-        case locate_up
-            sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.locate.plist
-        case update_all
-            macfx_allupdate
+        case update
+            macfx_update $argv
+        case airdrop
+            macfx_airdrop $argv
         case '*'
             macfx_lib
     end
@@ -192,12 +240,9 @@ function macfx
 end
 
 
-
-
-
 # ----------------------------------------------------------------
 complete -c macfx -f
-set -l macfx_execList discord rtcsnd msf fishup jenv xattr tm rdbug spell list set
+set -l macfx_execList discord rtcsnd msf fishup jenv xattr tm rdbug spell list set airdrop duse update
 complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a discord -d 'Show all devices in app.'
 complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a rtcsnd -d 'Fix RTC on hackintosh systems.'
 complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a msf -d 'Add MSF support to fish 3.*'
@@ -207,3 +252,6 @@ complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a xattr 
 complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a tm -d 'easy cleanup manager of Timeshift.'
 complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a rdbug -d 'Restarts Remote Desktop services'
 complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a spell -d 'SpellChk service'
+complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a airdrop -d 'AirDrop enabler via eth0 (if available Bluetooth)'
+complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a duse -d 'macOS Secure Erase for any disk'
+complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a update -d 'Some updates in one place'
