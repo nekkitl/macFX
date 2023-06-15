@@ -91,6 +91,7 @@ function macfx_du_se --argument argv
                 case ls
                     set disk_list (diskutil list | awk '{print $2,$NF}')
                     echo $disk_list | sed 's/\/dev\///g'
+
             end
         end
     end
