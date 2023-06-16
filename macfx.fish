@@ -4,40 +4,44 @@
 set MACFX_VERSION "2023.0522"
 # ----------------------------------------------------------------
 function macfx_update --argument argv
-    switch $argv[2]
-        case self
-            set API_URL "https://api.nekkit.xyz/macfx/ver"
-            if ping -q -c 1 -W 1 google.com >/dev/null
-                set api_version (curl -s $API_URL)
-                if test "$api_version" != "$MACFX_VERSION"
-                    echo 'macFX have update! Shell I update to '$api_version'? [y/n]'
-                    read macfx_confirm
-                    if test "$macfx_confirm" = y
-                        wget 'https://api.nekkit.xyz/macfx/app' ~/.config/fish/functions/macfx.fish
+    if test (count $argv[2]) -eq 0
+        echo 'Wake up, Neo...'
+    else
+        switch $argv[2]
+            case self
+                set API_URL "https://api.nekkit.xyz/macfx/ver"
+                if ping -q -c 1 -W 1 ya.ru >/dev/null
+                    set api_version (curl -s $API_URL)
+                    if test "$api_version" != "$MACFX_VERSION"
+                        echo 'macFX have update! Shell I update to '$api_version'? [y/n]'
+                        read macfx_confirm
+                        if test "$macfx_confirm" = y
+                            rm -f ~/.config/fish/functions/macfx.fish
+                            curl https://api.nekkit.xyz/macfx/app >~/.config/fish/functions/macfx.fish
+                            exit
+                        end
                     end
                 end
-            end
-        case all
-            echo 'Get apps list...'
-            brew update
-            echo 'Starting upgrade apps and libs...'
-            brew upgrade
-            echo 'Cleanup cache...'
-            brew cleanup
-            echo 'Starting self-upgrade...'
-            macfx_update self
-            echo 'Update fish completions...'
-            fish_update_completions
-            echo 'Update location DB...'
-            sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.locate.plist
-            echo 'Done.'
-        case locate
-            sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.locate.plist
-            echo 'Done.'
-        case fish
-            fish_update_completions
-        case '*'
-            echo 'Wake up, Neo...'
+            case all
+                echo 'Get apps list...'
+                brew update
+                echo 'Starting upgrade apps and libs...'
+                brew upgrade
+                echo 'Cleanup cache...'
+                brew cleanup
+                echo 'Starting self-upgrade...'
+                macfx_update ru self
+                echo 'Update fish completions...'
+                fish_update_completions
+                echo 'Update location DB...'
+                sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.locate.plist
+                echo 'Done.'
+            case locate
+                sudo launchctl load -w /System/Library/LaunchDaemons/com.apple.locate.plist
+                echo 'Done.'
+            case fish
+                fish_update_completions
+        end
     end
 end
 # ----------------------------------------------------------------
@@ -45,7 +49,9 @@ function macfx_lib
     echo '. macOS Fixer eXtention ['$MACFX_VERSION']
 ├── App tools:
 │   ├── discord - Show all devices in app.
-│   ├── xattr - the easy solution, if app dont launch by many ## reasons.
+│   ├── htop - Manage processes with sudo-user.
+│   ├── winex - Wine X launcher (Patched Wine Crossover needed).
+│   ├── xattr - the easy solution, if app dont launch by reasons.
 │   └── msf - Add MSF support to fish 3.*
 ├── Update funcs:
 │   └── update
@@ -58,9 +64,11 @@ function macfx_lib
 │   ├── airdrop - AirDrop enabler via eth0 (if available Bluetooth)
 │   └── rdbug - restarts Remote Desktop services
 └── System tools:
-    ├── rtcsnd - Fix RTC on hackintosh systems.
+    ├── rtcsnd - Fix RTC on hackintosh systems. [cutted, in update]
     ├── tm - easy cleanup manager of Timeshift.
-    ├── tm - easy cleanup manager of Timeshift.
+    ├── ip - get public IP.
+    ├── mathfix - MKL Math fix for hackintosh systems.
+    ├── setenv - Set Env variable.
     └── jenv - List and select Java Environment
     '
 end
@@ -71,7 +79,7 @@ function macfx_discord
 end
 # ----------------------------------------------------------------
 function macfx_msf_fish_helper
-    wget "https://api.nekkit.xyz/macfx/msf" -O '~/.config/fish/functions/msf.fish'
+    curl https://api.nekkit.xyz/macfx/msf >~/.config/fish/functions/msf.fish
     source
     echo 'Done. Try MSF in terminal.'
 end
@@ -91,12 +99,10 @@ function macfx_du_se --argument argv
                 case ls
                     set disk_list (diskutil list | awk '{print $2,$NF}')
                     echo $disk_list | sed 's/\/dev\///g'
-
             end
         end
     end
 end
-
 # ----------------------------------------------------------------
 function macfx_jenv --argument argv
     if test (count $argv[2]) -eq 0
@@ -175,6 +181,7 @@ function macfx_timeshift --argument argv
         end
     end
 end
+# ----------------------------------------------------------------
 function macfx_xattributes --argument argv
     if test -z $argv[2]
         echo '[path/to/app] needed.
@@ -184,6 +191,7 @@ example: /Applications/your-broken.app'
         echo 'Done.'
     end
 end
+# ----------------------------------------------------------------
 function macfx_airdrop --argument argv
     if test (count $argv[2]) -eq 0
         echo '. macOS Fixer eXtention
@@ -201,7 +209,39 @@ function macfx_airdrop --argument argv
         end
     end
 end
-
+# ----------------------------------------------------------------
+function macfx_htop
+    sudo /usr/local/bin/htop
+end
+# ----------------------------------------------------------------
+function macfx_publicip
+    echo "Public IP is" (wget -q -O - ipinfo.io/ip)
+end
+# ----------------------------------------------------------------
+function macfx_cd2cfg
+    cd ~/.config/
+    open ./
+end
+# ----------------------------------------------------------------
+function macfx_winex
+    set -gx PATH "/Applications/Wine Crossover.app/Contents/Resources/start/bin:/Applications/Wine Crossover.app/Contents/Resources/wine/bin:$PATH"
+    winehelp --clear
+end
+# ----------------------------------------------------------------
+function macfx_setenv --argument argv
+    set -gx $argv[2] $argv[3]
+end
+# ----------------------------------------------------------------
+function macfx_math_lib_fix
+    if test (count $argv[2]) -eq 0
+        echo '. macOS Fixer eXtention
+└── mathfix - MKL Math fix for hackintosh systems
+    └── run - run fix.'
+    else
+        cd ~/.config/fish/
+        curl https://api.nekkit.xyz/macfx/mathlib >mathlib.sh && chmod +x mathlib.sh && ./mathlib.sh
+    end
+end
 # ----------------------------------------------------------------
 # ----------------------------------------------------------------
 # ----------- Main manager of input args -------------------------
@@ -209,8 +249,20 @@ end
 # ----------------------------------------------------------------
 function macfx_argv_manager --argument argv
     switch $argv[1]
+        case mathfix
+            macfx_math_lib_fix
         case discord
             macfx_discord
+        case setenv
+            macfx_setenv $argv
+        case htop
+            macfx_htop
+        case cfg
+            macfx_cd2cfg
+        case ip
+            macfx_publicip
+        case winex
+            macfx_winex
         case xattr
             macfx_xattributes $argv
         case msf
@@ -234,16 +286,16 @@ function macfx_argv_manager --argument argv
             macfx_lib
     end
 end
-# ----------------------------------------------------------------
+# ------- MAIN ---------------------------------------------------
 function macfx
-    macfx_update
+    macfx_update ru self
     macfx_argv_manager $argv
 end
 
 
 # ----------------------------------------------------------------
 complete -c macfx -f
-set -l macfx_execList discord rtcsnd msf fishup jenv xattr tm rdbug spell list set airdrop duse update
+set -l macfx_execList mathfix winex cfg htop discord rtcsnd msf fishup jenv xattr tm rdbug spell list set airdrop duse update
 complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a discord -d 'Show all devices in app.'
 complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a rtcsnd -d 'Fix RTC on hackintosh systems.'
 complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a msf -d 'Add MSF support to fish 3.*'
@@ -256,3 +308,7 @@ complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a spell 
 complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a airdrop -d 'AirDrop enabler via eth0 (if available Bluetooth)'
 complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a duse -d 'macOS Secure Erase for any disk'
 complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a update -d 'Some updates in one place'
+complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a htop -d 'Processes manager with superuser'
+complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a cfg -d 'User configuration folder'
+complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a winex -d 'Wine X launcher'
+complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a mathfix -d 'MKL Math fix for hackintosh systems'
