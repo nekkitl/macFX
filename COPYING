@@ -1,0 +1,37 @@
+# English:
+
+Fish is a smart and convenient command line shell.
+
+original fish-shell (C) 2005-2009 Axel Liljencrantz
+fish-shell (C) 2009-2023 fish-shell community
+macfx (C) 2022-2023 Nick Ognev
+
+fish - is free software.
+
+Most of fish is licensed under the GNU General Public License version 2 and you may redistribute it and/or modify it under the terms of the GNU GPL as published by the Free Software Foundation.
+
+It also includes software licensed under the CMake license, the Python Software Foundation license version 2, the OpenBSD license, the ISC license, the NetBSD license, and the MIT license.
+
+Full licensing information can be found in the file:
+https://github.com/fish-shell/fish-shell/blob/master/doc_src/license.rst.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of merchantability or fitness for a particular purpose. See the GNU General Public License for more information.
+
+# Russian:
+
+Fish - это умная и удобная оболочка командной строки.
+
+original fish-shell (C) 2005-2009 Axel Liljencrantz
+fish-shell (C) 2009-2023 fish-shell комьюнити
+macfx (C) 2022-2023 Nick Ognev
+
+fish - это свободное программное обеспечение.
+
+Большая часть fish лицензирована под GNU General Public License версии 2, и вы можете распространять ее и/или изменять в соответствии с условиями GNU GPL, как опубликованной Фондом свободного программного обеспечения.
+
+fish также включает программное обеспечение, лицензированное по лицензии CMake, Python Software Foundation License version 2, лицензией OpenBSD, лицензией ISC, лицензией NetBSD и лицензией MIT.
+
+Полная информация о лицензировании содержится в файле:
+https://github.com/fish-shell/fish-shell/blob/master/doc_src/license.rst.
+
+Эта программа распространяется в надежде, что она окажется полезной, но БЕЗ ЛЮБЫХ ГАРАНТИЙ; даже без подразумеваемых гарантий товарной пригодности или ПРИГОДНОСТИ ДЛЯ КОНКРЕТНОЙ ЦЕЛИ. Более подробную информацию см. в Стандартной общественной лицензии GNU более подробную информацию.
