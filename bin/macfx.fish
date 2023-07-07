@@ -1,7 +1,71 @@
+# FISH EXTENSION FOR 3.6.1
 # ----------------------------------------------------------------
-# macOS Fixer eXtention for some errors and warnings
-# Nick "nekkitl" Ognev, 2023
-set MACFX_VERSION "2023.0522"
+set MACFX_VERSION \
+    "2023.0620"
+set MACFX_AUTHOR \
+    "Nick 'nekkitl' Ognev"
+set MACFX_DESCRIPTION \
+    "macOS Fixer eXtention for some errors and warnings"
+
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+# Library functions GUI
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+# ----------------------------------------------------------------
+function macfx_lib
+    echo '. macOS Fixer eXtention ['$MACFX_VERSION']
+├── App tools:
+│   ├── discord - Show all devices in app.
+│   ├── htop - Manage processes with sudo-user.
+│   ├── winex - Wine X launcher (Patched Wine Crossover needed).
+│   ├── xattr - the easy solution, if app dont launch by reasons.
+│   └── msf - Add MSF support to fish 3.*
+├── Update funcs:
+│   └── update
+│          ├── all - Update all
+│          ├── self - Update self (macfx)
+│          ├── fish - Update fish and completions via man
+│          └── locate - Update locate DB
+├── Services management:
+│   ├── spell - SpellChk service
+│   ├── airdrop - AirDrop enabler via eth0 (if available Bluetooth)
+│   └── rdbug - restarts Remote Desktop services
+└── System tools:
+    ├── rtcsnd - Fix RTC on hackintosh systems. [cutted, in update]
+    ├── tm - easy cleanup manager of Timeshift.
+    ├── ip - get public IP.
+    ├── mathfix - MKL Math fix for hackintosh systems.
+    ├── setenv - Set Env variable.
+    └── jenv - List and select Java Environment
+    '
+end
+
+function macfx_gen_completions
+    set MACFX_BACK_PWD (pwd)
+    cd ~/.config/fish/functions/
+    set macfx_file "macfx.fish"
+
+    set cmd (awk -F ': ' '/# CMND:/{print $2}' $macfx_file)
+    set result ""
+    for i in (seq (count $cmd))
+        set result "$result $cmd[$i]"
+    end
+    echo "set -l macfx_execList $result"
+
+    set cmd (awk -F ': ' '/# CMND:/{print $2}' $macfx_file)
+    set desc (awk -F ': ' '/# DESC:/{print $2}' $macfx_file)
+    for i in (seq (count $cmd))
+        echo "complete -c macfx -n 'not __fish_seen_subcommand_from $macfx_execList' -a $cmd[$i] -d '$desc[$i]'"
+    end
+end
+
+# ----------------------------------------------------------------
+# Update functionality
+# ----------------------------------------------------------------
+# CMND: update
+# DESC: Some updates in one place
 # ----------------------------------------------------------------
 function macfx_update --argument argv
     if test (count $argv[2]) -eq 0
@@ -41,48 +105,41 @@ function macfx_update --argument argv
                 echo 'Done.'
             case fish
                 fish_update_completions
+
+
         end
     end
 end
+
 # ----------------------------------------------------------------
-function macfx_lib
-    echo '. macOS Fixer eXtention ['$MACFX_VERSION']
-├── App tools:
-│   ├── discord - Show all devices in app.
-│   ├── htop - Manage processes with sudo-user.
-│   ├── winex - Wine X launcher (Patched Wine Crossover needed).
-│   ├── xattr - the easy solution, if app dont launch by reasons.
-│   └── msf - Add MSF support to fish 3.*
-├── Update funcs:
-│   └── update
-│          ├── all - Update all
-│          ├── self - Update self (macfx)
-│          ├── fish - Update fish and completions via man
-│          └── locate - Update locate DB
-├── Services management:
-│   ├── spell - SpellChk service
-│   ├── airdrop - AirDrop enabler via eth0 (if available Bluetooth)
-│   └── rdbug - restarts Remote Desktop services
-└── System tools:
-    ├── rtcsnd - Fix RTC on hackintosh systems. [cutted, in update]
-    ├── tm - easy cleanup manager of Timeshift.
-    ├── ip - get public IP.
-    ├── mathfix - MKL Math fix for hackintosh systems.
-    ├── setenv - Set Env variable.
-    └── jenv - List and select Java Environment
-    '
-end
-# ---------- Discord Devices not seen fix ------------------------
+# in Discord devices not seen fix
+# ----------------------------------------------------------------
+# CMND: discord
+# DESC: Show all devices in app.
+# ----------------------------------------------------------------
 function macfx_discord
     codesign --remove-signature '/Applications/Discord.app/Contents/Frameworks/Discord Helper (Renderer).app/Contents/MacOS/Discord Helper (Renderer)'
     sudo codesign --remove-signature /Applications/Discord.app/Contents/Frameworks/Discord\ Helper\ \(GPU\).app /Applications/Discord.app/Contents/Frameworks/Discord\ Helper\ \(Plugin\).app /Applications/Discord.app/Contents/Frameworks/Discord\ Helper\ \(Renderer\).app /Applications/Discord.app/Contents/Frameworks/Discord\ Helper.app
 end
+
+
+# ----------------------------------------------------------------
+# Metasplot framework helper
+# ----------------------------------------------------------------
+# CMND: msf
+# DESC: 
 # ----------------------------------------------------------------
 function macfx_msf_fish_helper
     curl https://api.nekkit.xyz/macfx/msf >~/.config/fish/functions/msf.fish
     source
     echo 'Done. Try MSF in terminal.'
 end
+
+# ----------------------------------------------------------------
+# 
+# ----------------------------------------------------------------
+# CMND: 
+# DESC: 
 # ----------------------------------------------------------------
 function macfx_du_se --argument argv
     if test (count $argv[2]) -eq 0
@@ -92,17 +149,22 @@ function macfx_du_se --argument argv
     │    └── [disk] - Disk indentifier from listing.
     └── ls - List disks'
     else
-        if test (count $argv[2]) -eq 1
-            diskutil secureErase $argv[2] /dev/$args[3]
-        else
+        if test (count $argv[3]) -eq 0
             switch $argv[2]
                 case ls
-                    set disk_list (diskutil list | awk '{print $2,$NF}')
-                    echo $disk_list | sed 's/\/dev\///g'
+                    diskutil list | column | grep -v /dev/disk | egrep --color=always -y ':|TYPE|NAME|SIZE|IDENTIFIER'
             end
+        else
+            diskutil secureErase $argv[2] /dev/$args[3]
         end
     end
 end
+
+# ----------------------------------------------------------------
+# 
+# ----------------------------------------------------------------
+# CMND: 
+# DESC: 
 # ----------------------------------------------------------------
 function macfx_jenv --argument argv
     if test (count $argv[2]) -eq 0
@@ -119,6 +181,12 @@ function macfx_jenv --argument argv
         end
     end
 end
+
+# ----------------------------------------------------------------
+# 
+# ----------------------------------------------------------------
+# CMND: 
+# DESC: 
 # ----------------------------------------------------------------
 function macfx_timeshift --argument argv
     if test (count $argv[2]) -eq 0
@@ -181,6 +249,12 @@ function macfx_timeshift --argument argv
         end
     end
 end
+
+# ----------------------------------------------------------------
+# 
+# ----------------------------------------------------------------
+# CMND: 
+# DESC: 
 # ----------------------------------------------------------------
 function macfx_xattributes --argument argv
     if test -z $argv[2]
@@ -191,6 +265,12 @@ example: /Applications/your-broken.app'
         echo 'Done.'
     end
 end
+
+# ----------------------------------------------------------------
+# 
+# ----------------------------------------------------------------
+# CMND: 
+# DESC: 
 # ----------------------------------------------------------------
 function macfx_airdrop --argument argv
     if test (count $argv[2]) -eq 0
@@ -203,34 +283,72 @@ function macfx_airdrop --argument argv
             case on
                 defaults write com.apple.NetworkBrowser BrowseAllInterfaces 1
                 killall Finder
+                echo Enabled.
             case off
                 defaults write com.apple.NetworkBrowser BrowseAllInterfaces 0
                 killall Finder
+                echo Disabled.
         end
     end
 end
+
+# ----------------------------------------------------------------
+# 
+# ----------------------------------------------------------------
+# CMND: 
+# DESC: 
 # ----------------------------------------------------------------
 function macfx_htop
     sudo /usr/local/bin/htop
 end
+
+# ----------------------------------------------------------------
+# 
+# ----------------------------------------------------------------
+# CMND: 
+# DESC: 
 # ----------------------------------------------------------------
 function macfx_publicip
     echo "Public IP is" (wget -q -O - ipinfo.io/ip)
 end
+
+# ----------------------------------------------------------------
+# 
+# ----------------------------------------------------------------
+# CMND: 
+# DESC: 
 # ----------------------------------------------------------------
 function macfx_cd2cfg
     cd ~/.config/
     open ./
 end
+
+# ----------------------------------------------------------------
+# 
+# ----------------------------------------------------------------
+# CMND: 
+# DESC: 
 # ----------------------------------------------------------------
 function macfx_winex
     set -gx PATH "/Applications/Wine Crossover.app/Contents/Resources/start/bin:/Applications/Wine Crossover.app/Contents/Resources/wine/bin:$PATH"
     winehelp --clear
 end
+
+# ----------------------------------------------------------------
+# 
+# ----------------------------------------------------------------
+# CMND: 
+# DESC: 
 # ----------------------------------------------------------------
 function macfx_setenv --argument argv
     set -gx $argv[2] $argv[3]
 end
+
+# ----------------------------------------------------------------
+# 
+# ----------------------------------------------------------------
+# CMND: 
+# DESC: 
 # ----------------------------------------------------------------
 function macfx_math_lib_fix
     if test (count $argv[2]) -eq 0
@@ -242,11 +360,11 @@ function macfx_math_lib_fix
         curl https://api.nekkit.xyz/macfx/mathlib >mathlib.sh && chmod +x mathlib.sh && ./mathlib.sh
     end
 end
-# ----------------------------------------------------------------
-# ----------------------------------------------------------------
-# ----------- Main manager of input args -------------------------
-# ----------------------------------------------------------------
-# ----------------------------------------------------------------
+
+
+# =======================================================
+# ======= Main manager of input args ====================
+# =======================================================
 function macfx_argv_manager --argument argv
     switch $argv[1]
         case mathfix
@@ -282,33 +400,64 @@ function macfx_argv_manager --argument argv
             macfx_update $argv
         case airdrop
             macfx_airdrop $argv
+        case duse
+            macfx_du_se $argv
+        case userid
+            dscl /Search -read "/Users/$USER" GeneratedUID
+        case time
+            tty-clock -srnnBC 7
+        case cleanup
+            docker system prune -a
         case '*'
             macfx_lib
     end
 end
-# ------- MAIN ---------------------------------------------------
+
+# =======================================================
+# ========= LAUCNHER ====================================
+# =======================================================
 function macfx
     macfx_update ru self
     macfx_argv_manager $argv
 end
 
 
-# ----------------------------------------------------------------
+# -------- COMPLETE -----------------------------------------------
 complete -c macfx -f
-set -l macfx_execList mathfix winex cfg htop discord rtcsnd msf fishup jenv xattr tm rdbug spell list set airdrop duse update
-complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a discord -d 'Show all devices in app.'
-complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a rtcsnd -d 'Fix RTC on hackintosh systems.'
-complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a msf -d 'Add MSF support to fish 3.*'
-complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a fishup -d 'Update fish completions via man'
-complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a jenv -d 'List and select Java Environment'
-complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a xattr -d 'the easy solution, if app dont launch by many reasons.'
-complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a tm -d 'easy cleanup manager of Timeshift.'
-complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a rdbug -d 'Restarts Remote Desktop services'
-complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a spell -d 'SpellChk service'
-complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a airdrop -d 'AirDrop enabler via eth0 (if available Bluetooth)'
-complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a duse -d 'macOS Secure Erase for any disk'
-complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a update -d 'Some updates in one place'
-complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a htop -d 'Processes manager with superuser'
-complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a cfg -d 'User configuration folder'
-complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a winex -d 'Wine X launcher'
-complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" -a mathfix -d 'MKL Math fix for hackintosh systems'
+set -l macfx_execList \
+    mathfix \
+    winex \
+    cfg \
+    htop \
+    discord \
+    rtcsnd \
+    msf \
+    fishup \
+    jenv \
+    xattr \
+    tm \
+    rdbug \
+    spell \
+    list \
+    set \
+    airdrop \
+    duse \
+    update
+
+complete -c macfx -n "not __fish_seen_subcommand_from $macfx_execList" \
+    -a discord -d 'Show all devices in app.' \
+    -a rtcsnd -d 'Fix RTC on hackintosh systems.' \
+    -a msf -d 'Add MSF support to fish 3.*' \
+    -a fishup -d 'Update fish completions via man' \
+    -a jenv -d 'List and select Java Environment' \
+    -a xattr -d 'the easy solution, if app dont launch by many reasons.' \
+    -a tm -d 'easy cleanup manager of Timeshift.' \
+    -a rdbug -d 'Restarts Remote Desktop services' \
+    -a spell -d 'SpellChk service' \
+    -a airdrop -d 'AirDrop enabler via eth0 (if available Bluetooth)' \
+    -a duse -d 'macOS Secure Erase for any disk' \
+    -a update -d 'Some updates in one place' \
+    -a htop -d 'Processes manager with superuser' \
+    -a cfg -d 'User configuration folder' \
+    -a winex -d 'Wine X launcher' \
+    -a mathfix -d 'MKL Math fix for hackintosh systems'

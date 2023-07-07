@@ -1,0 +1,17 @@
+#!/bin/bash
+case $1 in
+        '')
+                for((i=16; i<256; i++)); do
+                    printf "\e[48;5;${i}m%03d" $i;
+                    printf '\e[0m';
+                    [ ! $((($i - 15) % 6)) -eq 0 ] && printf ' ' || printf '\n'
+                done
+        ;;
+        '-v')
+                for((i=16; i<48; i++)); do
+                    printf "\e[48;5;${i}m%03d" $i
+                    echo '\e[48;5;${i}m%03d'\n\n
+                    [ ! $((($i - 15) % 6)) -eq 0 ] && printf ' ' || printf '\n'
+                done
+        ;;``
+esac
